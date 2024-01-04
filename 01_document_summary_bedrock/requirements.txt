@@ -1,0 +1,4 @@
+notebook==7.0.6
+langchain==0.0.353
+boto3==1.34.11
+unstructured==0.11.8
