@@ -1,0 +1,6 @@
+notebook==7.0.6
+langchain==0.0.353
+boto3==1.34.11
+pandas==2.1.4
+unstructured[all-docs]
+pinecone-client==2.2.4
