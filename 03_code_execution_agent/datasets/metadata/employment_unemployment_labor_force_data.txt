@@ -1,0 +1,1 @@
+This dataset uses seasonally adjusted data from the US Bureau of Labor Statistics to present information on Maryland's labor force participation rate, employment rate, and unemployment rate.
