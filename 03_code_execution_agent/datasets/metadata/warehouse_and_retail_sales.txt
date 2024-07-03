@@ -1,0 +1,1 @@
+This dataset contains a list of sales and movement data by item and department appended monthly. Update Frequency : Monthly
