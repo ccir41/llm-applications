@@ -1,6 +1,5 @@
 import os
 import uuid
-import hashlib
 
 import boto3
 import pandas as pd
@@ -11,9 +10,9 @@ from langchain_core.prompts import PromptTemplate
 from langchain.agents.agent_types import AgentType
 from langchain_experimental.agents.agent_toolkits import create_python_agent
 from langchain_experimental.tools import PythonAstREPLTool
-from langchain_pinecone import PineconeVectorStore
+from langchain_pinecone.vectorstores import Pinecone as PineconeVectorStore
 
-from pinecone import Pinecone
+from pinecone import Pinecone as PineconeClient
 
 from langgraph.graph import START, END, StateGraph
 from typing import List
@@ -24,10 +23,12 @@ import streamlit as st
 st.set_page_config(page_title="LLM Workshop", layout="wide")
 st.title('LLM Workshop')
 
-index_name = "genese-llm-workshop"
-namespace = "tech-tuesday"
+PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
 
-pc = Pinecone(api_key="8b444f46-fca7-4b41-a142-463ed4167ba7")
+INDEX_NAME = "genese-llm-workshop"
+NAMESPACE = "tech-tuesday"
+
+pinecone_client = PineconeClient(api_key=PINECONE_API_KEY)
 
 session = boto3.Session(profile_name='genese-llm-acc')
 bedrock_client = session.client(
@@ -48,21 +49,15 @@ bedrock_llm = ChatBedrock(
     }
 )
 
-PINECONE_INDEX_HOST = pc.describe_index(index_name)["host"]
-pc_index = pc.Index(host=PINECONE_INDEX_HOST)
+PINECONE_INDEX_HOST = pinecone_client.describe_index(INDEX_NAME)["host"]
+pc_index = pinecone_client.Index(host=PINECONE_INDEX_HOST)
 
 pc_vectorstore = PineconeVectorStore(
     index=pc_index, 
     embedding=bedrock_embeddings,
     text_key='text',
-    namespace=namespace
+    namespace=NAMESPACE
 )
-
-def calculate_hash(text):
-    hash = hashlib.sha256()
-    hash.update(text.encode('utf-8'))
-    hexdigest = hash.hexdigest()
-    return hexdigest
 
 def pinecone_upsert(texts, metadatas, ids):
     pc_vectorstore.add_texts(
@@ -71,7 +66,7 @@ def pinecone_upsert(texts, metadatas, ids):
         ids=ids
     )
 
-def pinecone_similarity_search(question, namespace=namespace, k=2, filter=None):
+def pinecone_similarity_search(question, namespace=NAMESPACE, k=2, filter=None):
     docs = pc_vectorstore.similarity_search(
         question,
         k=k,
@@ -487,7 +482,7 @@ with st.form(key="question_form", clear_on_submit=True):
             {
                 "question": question,
                 "uuid_str": str(uuid.uuid4()),
-                "namespace": namespace,
+                "namespace": NAMESPACE,
                 "top_k": 2
             }
         )
